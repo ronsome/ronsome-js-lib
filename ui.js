@@ -1,11 +1,7 @@
-
-if( document.querySelectorAll('script[src$="ui.js.php?css"]')){
-	document.write('<link rel="stylesheet" type="text/css" href="/css/ui.css.php" />');
-	document.close();
-}
-
 /*
-* ui.js
+* ronsome-js-lib.js
+* Ron Newsome, Jr.
+* 2018-04-30
 */
 
 if (!String.prototype.trim) {
@@ -18,18 +14,25 @@ if (!String.prototype.trim) {
   })();
 }
 
-Date.prototype.toISOString = function(full) {
-	function $t(num){return num<10? '0'+num: num;}
-  $M = $t( this.getMonth()+1 ); $D = $t( this.getDate() );
-  $h = $t( this.getHours() ); $m = $t(this.getMinutes()); 
-  $s = $t(this.getSeconds());
-  var time = full? "T"+ $h+":"+$m+":"+$s+"Z": '';
-  return this.getFullYear() +"-" +$M+"-"+$D+time;
+if( !String.prototype.strip ) {
+	String.prototype.strip = function() {
+		return this.replace(/<[^>]+>/gi, '');
+	};
+}
+
+String.prototype.format = function(){
+	let str = this;
+	let vars = arguments;
+	for(var i=0; i<vars.length; i++){
+		str = str.replace('{' + i + '}', vars[i]);
+	}
+	return str;
 }
 
 function $(el){ return document.getElementById(el); }
 function $$(sel){ return document.querySelectorAll(sel); }
 
+// Convenience function to create a new element
 function $E(tag, atts){
 	var el = document.createElement(tag);
 	for(every in atts){ el[every] = atts[every]; }
@@ -55,64 +58,59 @@ function $_COOKIE(label){
 
 function ondomloaded(f){
 	document.addEventListener('DOMContentLoaded', f, false);
-}/* 
-* calendar.js
-* Ron Newsome, Jr.
-* 2012-12-22
-* JavaScript Calendar
-* DOM compliant
-*/
+}
 
+// Navigable calendar object
 function Calendar() {
 	var opts = (arguments[0] || {});
 	function $E(tag, atts){
 		var el = document.createElement(tag);
 		for(every in atts){ el[every] = atts[every]; }
-		return el;
+			return el;
 	}
 	var wrapper = new $E('div',{innerHTML:'', className:(opts.className || 'rn_calendar')});
 
 	wrapper.setAttribute("id", opts.id || "");
 	wrapper.dayNames = ["S", "M", "T", "W", "T", "F", "S"];
-  
-  wrapper.now = new Date();
-  wrapper.startPos = 0;
-  wrapper.padNum = function(num){
-  	return num > 9? num: '0' + num;
-  }
+
+	wrapper.now = new Date();
+	wrapper.startPos = 0;
+	wrapper.padNum = function(num){
+		return num > 9? num: '0' + num;
+	}
 
 	wrapper.checkleapyear = function(datea) {
 	 // function by hscripts.com
 	 datea = parseInt(datea);
-	 	if(datea%4 == 0) {
-			if(datea%100 != 0) {
-			return true;
-			} else {
-				if(datea%400 == 0) {return true;}
-				else {return false;}
-			}
-		}
-	return false;
+	 if(datea%4 == 0) {
+	 	if(datea%100 != 0) {
+	 		return true;
+	 	} else {
+	 		if(datea%400 == 0) {return true;}
+	 		else {return false;}
+	 	}
+	 }
+	 return false;
 	}
 
 	wrapper.mthData = [
-		{name:"January", length:31},
-		{name:"February", length:(wrapper.checkleapyear(wrapper.now.getFullYear())? 29: 28)},
-		{name:"March", length:31}, {name:"April", length:30},{name:"May", length:31},
-		{name:"June", length:30}, {name:"July", length:31},{name:"August", length:31},
-		{name:"September", length:30}, {name:"October", length:31},{name:"November", length:30},
-		{name:"December", length:31}
-  ];
+	{name:"January", length:31},
+	{name:"February", length:(wrapper.checkleapyear(wrapper.now.getFullYear())? 29: 28)},
+	{name:"March", length:31}, {name:"April", length:30},{name:"May", length:31},
+	{name:"June", length:30}, {name:"July", length:31},{name:"August", length:31},
+	{name:"September", length:30}, {name:"October", length:31},{name:"November", length:30},
+	{name:"December", length:31}
+	];
 
-wrapper.Set = function(){
+	wrapper.Set = function(){
 
 
-var dt = wrapper.now.getDate();
-var numDays = wrapper.mthData[wrapper.now.getMonth()].length+1;
-	if(wrapper.now.getMonth()==1 && wrapper.checkleapyear(wrapper.now.getFullYear()) ){
-		numDays = wrapper.mthData[wrapper.now.getMonth()].length+2;
-	}
-	
+		var dt = wrapper.now.getDate();
+		var numDays = wrapper.mthData[wrapper.now.getMonth()].length+1;
+		if(wrapper.now.getMonth()==1 && wrapper.checkleapyear(wrapper.now.getFullYear()) ){
+			numDays = wrapper.mthData[wrapper.now.getMonth()].length+2;
+		}
+
 // Figure out where 1st of the month goes
 var yesterday = wrapper.now.getDate()-1;
 var firstDay = wrapper.now.setDate(wrapper.now.getDate()-yesterday);
@@ -132,57 +130,57 @@ ySpan.appendChild( document.createTextNode( wrapper.now.getFullYear() ) );
 yearmo.appendChild( ySpan );
 
 wrapper.appendChild(yearmo);
-	
+
 var tbl = document.createElement("table");
 var tbody = document.createElement("tbody");
 var thead = document.createElement("thead");
 var header = document.createElement("tr");
-	header.className = "header";
+header.className = "header";
 tbl.appendChild(thead);
 thead.appendChild(header);
 
 // Create days of the week
-	for(i=0; i<wrapper.dayNames.length; i++){
-		var dayTd = document.createElement("th");
-		dayTd.appendChild( document.createTextNode(wrapper.dayNames[i]) );
-		header.appendChild(dayTd);
-	}
+for(i=0; i<wrapper.dayNames.length; i++){
+	var dayTd = document.createElement("th");
+	dayTd.appendChild( document.createTextNode(wrapper.dayNames[i]) );
+	header.appendChild(dayTd);
+}
 
 // Create days of the month
 var tr;
-	for (ct=0; ct<42; ct++) {
+for (ct=0; ct<42; ct++) {
 	var dayNum = ct - wrapper.startPos;
 	if(dayNum>0){
 		if(dayNum<=wrapper.mthData[wrapper.now.getMonth()].length){
-		dayNum = dayNum;
+			dayNum = dayNum;
 		} else {dayNum = "";}
 	} else {
-	dayNum = "";
+		dayNum = "";
 	}
-		if(ct%7 == 1){
+	if(ct%7 == 1){
 		tr = document.createElement("tr");
 		tbody.appendChild(tr);
-		}
-		
-		if(tr) {
+	}
+
+	if(tr) {
 		dayNum = (dayNum<=numDays)? dayNum: "";
 		td = new $E("td");
 		if(dayNum != "") { td.id = 'td'+dayNum; }
 		var tdspan = new $E('span',{innerHTML:dayNum});
 		td.appendChild( tdspan );
-			if( (dayNum == new Date().getDate()) && wrapper.now.getMonth() == new Date().getMonth() ){
-				td.className =  "rn_today";
-			}
+		if( (dayNum == new Date().getDate()) && wrapper.now.getMonth() == new Date().getMonth() ){
+			td.className =  "rn_today";
+		}
 		
 		td.datetext = [wrapper.now.getFullYear(), 
-			wrapper.padNum(wrapper.now.getMonth()+1),
-			wrapper.padNum(dayNum)].join('-');
+		wrapper.padNum(wrapper.now.getMonth()+1),
+		wrapper.padNum(dayNum)].join('-');
 		tr.appendChild( td );
-		}		
-	}
+	}		
+}
 
-	tbl.appendChild(tbody);
-	wrapper.appendChild(tbl);
+tbl.appendChild(tbody);
+wrapper.appendChild(tbl);
 }
 
 wrapper.getMonth = function(pad){
@@ -226,19 +224,11 @@ wrapper.goto = function(y, m, callback){
 }
 
 wrapper.Set();
-	return wrapper;
+return wrapper;
 }
-/*
-* filter_list.js
-* Ron Newsome, Jr.
-* 2015-06-13
-*/
 
-if( !String.prototype.strip ) {
-	String.prototype.strip = function() {
-		return this.replace(/<[^>]+>/gi, '');
-	};
-}
+
+// Material design effects
 
 (function(){
 	function rn_filter(){
@@ -274,17 +264,9 @@ if( !String.prototype.strip ) {
 	}
 
 	document.addEventListener('DOMContentLoaded', rn_addFilter);
-})();/*
-* form.js
-* Ron Newsome, Jr.
-* 2012-12-21
+})();
 
-
-if( document.querySelectorAll('script[src$="forms.js?css"]')){
-	document.write('<link rel="stylesheet" type="text/css" href="/css/forms.css" />');
-	document.close();
-}*/
-
+// User form input
 function form(fields, ttl, callback, onCancel, opts){
 	opts = opts || {autocomplete: 'off', capitalize: 'off'};
 
@@ -361,7 +343,6 @@ function form(fields, ttl, callback, onCancel, opts){
 		if(onClick){
 			wrapper.poster.addEventListener('click', onClick, false);
 		}
-		//wrapper.fieldset.parentNode.insertBefore(wrapper.poster, wrapper.fieldset);
 		wrapper.subtext.parentNode.insertBefore(wrapper.poster, wrapper.subtext);
 		return wrapper.poster;		
 	}
@@ -429,17 +410,8 @@ function form(fields, ttl, callback, onCancel, opts){
 	document.body.appendChild(wrapper.skin);
 	return wrapper;
 }
-/* 
-* growl.js
-* Ron Newsome, Jr.
-* 2012-12-21
-*/
 
-if( document.querySelectorAll('script[src$="?css"]')){
-	//document.write('<link rel="stylesheet" type="text/css" href="/css/growl.css" />');
-	//document.close();
-}
-
+// A quick notification system
 function Growl(str, opts){
 	var opts = opts || {};
 	var wrapper;
@@ -474,20 +446,9 @@ function Growl(str, opts){
 		}
 	}
 	setTimeout(msg.dismiss, opts.timeout || 3000);
-}/*
-* indicator.js
-* Ron Newsome, Jr.
-* 2012-08-06
-*/
-
-if( !window.$E ) {
-	$E = function(tag, atts){
-		var el = document.createElement(tag);
-		for(every in atts){ el[every] = atts[every]; }
-		return el; 
-	}
 }
 
+// A modal indicator
 function Indicator(){
 	var x = document.documentElement.clientWidth/2 - 16;
 	var wrapper = new $E('div',{className:'rn_indicator'});
@@ -504,17 +465,9 @@ function Indicator(){
 	wrapper.appendChild(wrapper.spinner);
 	document.body.appendChild(wrapper);
 	return wrapper;
-}/* 
-* info.js
-* Ron Newsome, Jr.
-* 2012-12-21
-*/
-
-if( document.querySelectorAll('script[src$="info.js?css"]')){
-	document.write('<link rel="stylesheet" type="text/css" href="/css/info.css" />');
-	document.close();
 }
 
+// An in-page logging system
 function info(str, color){
 	var infodiv;
 	if(document.getElementById('rn_infodiv')) {
@@ -540,45 +493,10 @@ function info(str, color){
 	if(color) { infoline.style.color = color; }
 	infodiv.appendChild(infoline);
 	return str;
-}/*
-* login.js
-* Ron Newsome, Jr.
-* 02-13-2007
-*/
-
-function login() {
-	window.location = '/login.php';
 }
 
-function logout() {
-	var exp = new Date();
-	exp.setMonth(exp.getMonth()-6);
-	document.cookie = "indelibly=xxx;path=/;expires=" + exp.toGMTString();
-	return true;
-}
 
-document.addEventListener('DOMContentLoaded', function(){
-	if(document.getElementById('logindiv')){
-		var req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-    	if (req.readyState == 4 && req.status == 200) {
-        document.getElementById('logindiv').innerHTML = req.responseText;
-    	}
-  	}
-  	req.open("GET", '/php_scripts/myinfo?output=html'); 
-  	req.send(null);
-	}
-}, false);
-/*
-* menucontrol.js
-* 2013-06-01
-*/
-
-if( document.querySelectorAll('script[src$="?css"]')){
-	document.write('<link rel="stylesheet" type="text/css" href="/css/menucontrol.css" />');
-	document.close();
-}
-
+// Control page menus
 document.addEventListener('DOMContentLoaded', function(){
 	if(document.querySelectorAll('.rn_app_menu_btn').length) {
 		document.querySelectorAll('.rn_app_menu_btn')[0].innerHTML = '<span></span>';
@@ -627,19 +545,13 @@ document.addEventListener('DOMContentLoaded', function(){
 		window.addEventListener('resize', stretch, false);
 	}
 }, false);
-/*
-* popbox.js <http://ronsome.com/projects/Popbox>
-* 2012-12-23
-* (c) Ron Newsome, Jr.
-* Released under a Creative Commons license 
-* <http://creativecommons.org/licenses/by/3.0/us/>
-*/
 
+// A simple image preview library
 if(document.querySelectorAll('script[src$="popbox.js?css"]').length){
 	document.write('<link rel="stylesheet" type="text/css" href="/css/popbox.css" />');
 	document.close();
 }
-
+// Gesture control for touchscreen devices
 Element.prototype.addGesture = function(gesture, callback){
 	var elmnt = this;
 	function start(evt){
@@ -694,14 +606,6 @@ Element.prototype.addGesture = function(gesture, callback){
 }
 
 void(function(){
-	function $(el){ return document.getElementById(el); }
-	function $$(sel){ return document.querySelectorAll(sel); }
-	function $E(tag, atts){
-		var el = document.createElement(tag);
-		for(every in atts){ el[every] = atts[every]; }
-		return el; 
-	}
-
 	function view(a){
 		var shadowWidth = document.documentElement.clientWidth;
 		var shadowHeight = 60 + document.documentElement.clientHeight;
@@ -756,12 +660,8 @@ void(function(){
 	document.addEventListener('DOMContentLoaded', rn_popbox_init, false);
 	window.addEventListener('resize', resetSize, false);
 })();
-/*
-* xhr.js
-* Ron Newsome Jr.
-* 2012-12-21
-*/
 
+// Simplify AJAX calls
 function xhr(url, callback, onerror){
 	var poststring = url.indexOf('?#')>-1? url.substring(url.indexOf('?#')+2): null;
 	onerror = onerror || function(){}
